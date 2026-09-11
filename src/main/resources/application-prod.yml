@@ -1,0 +1,39 @@
+# 운영 — 시크릿은 전부 환경변수(시크릿 매니저 주입 전제), 기점은 k8s Service DNS.
+spring:
+  config:
+    import: "optional:file:.env-prod[.properties]"    # prod 프로필을 로컬에서 재현할 때만 사용 — k8s 운영은 Secret 환경변수 주입(파일 불필요)
+  data:
+    redis:
+      host: ${CROWFOOT_REDIS_HOST}
+      port: ${CROWFOOT_REDIS_PORT:6379}
+      password: ${CROWFOOT_REDIS_PASSWORD}
+      database: ${CROWFOOT_REDIS_DATABASE:400}
+  cloud:
+    discovery:
+      client:
+        simple:
+          instances:
+            crowfoot-core-api[0]:
+              # k8s Service가 80으로 서빙(프록시)하므로 포트 불필요 — 컨테이너 실제 포트만 8080
+              uri: ${CROWFOOT_CORE_URI:http://crowfoot-core-api}
+    openfeign:
+      client:
+        config:
+          default:
+            connect-timeout: 1000
+            read-timeout: 2000
+crowfoot:
+  auth:
+    front:
+      origin: https://crowfoot.java21.net
+      callback-path: /auth/callback
+    cookie:
+      secure: true
+    blacklist:
+      store: redis
+logging:
+  level:
+    net.java21.crowfoot.auth: INFO
+
+server:
+  port: 8080   # 운영 — 모든 서버 8080

@@ -1,0 +1,35 @@
+# 테스트 — 고정 더미 시크릿(운영·로컬 재사용 금지)·인메모리 블랙리스트.
+spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          github:
+            client-id: test-client-id
+            client-secret: test-client-secret
+            redirect-uri: ${crowfoot.auth.front.origin}${crowfoot.auth.front.callback-path}
+crowfoot:
+  auth:
+    token:
+      access-ttl: 60m
+      refresh-ttl: 6h
+      rotation-grace: 30s
+      clock-skew: 30s
+      issuer: https://crowfoot-api.java21.net
+      audience:
+        - crowfoot-web
+        - crowfoot-sync
+    front:
+      origin: http://localhost:8080
+      callback-path: /auth/callback
+    cookie:
+      secure: false
+    blacklist:
+      store: memory
+    # 더미 시크릿 — 32바이트(256bit) 이상 고정값
+    jwt-secret: dGVzdC1qd3Qtc2VjcmV0LWtleS1tdXN0LWJlLWF0LWxlYXN0LTMyLWJ5dGVzLWxvbmc=
+    flow-secret: dGVzdC1mbG93LWNvb2tpZS1zZWNyZXQta2V5LW11c3QtYmUtYXQtbGVhc3QtMzItYnl0ZXM=
+management:
+  health:
+    redis:
+      enabled: false                 # memory 스토어 — Redis 헬스체크 비활성

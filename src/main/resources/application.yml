@@ -1,0 +1,48 @@
+# 공통 설정 — 프로필 무관하게 같은 값만 둔다. 프로필별 값은 application-local.yml / application-prod.yml
+spring:
+  application:
+    name: crowfoot-auth
+  # 기본 프로필 — 지정 없이 기동하면 local. 운영은 SPRING_PROFILES_ACTIVE=prod (k8s)
+  profiles:
+    default: local
+  # 시크릿 파일 import는 프로필별로 나뉜다 — local은 .env-local, prod는 .env-prod (각 application-{profile}.yml).
+  # 운영 배포(k8s)는 파일 없이 Secret 환경변수 주입만으로 기동한다 (02-auth/requirements.md Section 1.4.3).
+  security:
+    oauth2:
+      client:
+        registration:
+          github:
+            client-id: ${CROWFOOT_AUTH_GITHUB_CLIENT_ID}
+            client-secret: ${CROWFOOT_AUTH_GITHUB_CLIENT_SECRET}
+            scope:
+              - read:user
+              - user:email
+            # 프론트 콜백 구조 — GitHub 앱에 등록된 콜백과 동일한 값(02-auth/api.md Section 3.1)
+            redirect-uri: ${crowfoot.auth.front.origin}${crowfoot.auth.front.callback-path}
+          # google: 자격 증명 수령 후 추가 (PKCE 활성) — 02-auth/oauth-provider-setup.md
+        provider:
+          github:
+            authorization-uri: https://github.com/login/oauth/authorize
+            token-uri: https://github.com/login/oauth/access_token
+            user-info-uri: https://api.github.com/user
+            user-name-attribute: id
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+crowfoot:
+  auth:
+    # 토큰 정책 (02-auth/requirements.md Section 1.4.4) — 파생값(쿠키 Max-Age·블랙리스트 TTL)은 별도 키 없이 계산
+    token:
+      access-ttl: 60m
+      refresh-ttl: 6h
+      rotation-grace: 30s
+      clock-skew: 30s
+      issuer: https://crowfoot-api.java21.net
+      audience:
+        - crowfoot-web
+        - crowfoot-sync
+    # 서명 키 — Base64 32바이트(256bit) 이상. 환경변수(.env-local/prod 시크릿 매니저)에서만 공급, 소스 포함 금지
+    jwt-secret: ${CROWFOOT_AUTH_JWT_SECRET}
+    flow-secret: ${CROWFOOT_AUTH_FLOW_SECRET}
