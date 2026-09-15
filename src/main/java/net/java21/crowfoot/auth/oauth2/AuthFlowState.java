@@ -32,15 +32,17 @@ public record AuthFlowState(
 
     /**
      * 쿠키 상태 → authorize 요청 재조립 — 시작(302 URL 생성)과 교환(token 요청)이 같은 형상을 쓴다.
-     * code_verifier가 있으면 S256 code_challenge를 계산해 attributes에 함께 싣는다
-     * (DefaultAuthorizationCodeTokenResponseClient가 attributes의 code_verifier를 token 요청에 첨부한다).
+     * code_verifier가 있으면 PKCE 파라미터가 둘로 나뉘어 싣는다:
+     * attributes.code_verifier — DefaultAuthorizationCodeTokenResponseClient가 token 요청에 첨부,
+     * additionalParameters.code_challenge(+method) — authorize URL 쿼리로 직렬화된다.
      */
     public OAuth2AuthorizationRequest toAuthorizationRequest(ClientRegistration registration) {
         Map<String, Object> attributes = new HashMap<>();
+        Map<String, Object> additionalParameters = new HashMap<>();
         if (codeVerifier != null) {
             attributes.put(PkceParameterNames.CODE_VERIFIER, codeVerifier);
-            attributes.put(PkceParameterNames.CODE_CHALLENGE, s256(codeVerifier));
-            attributes.put(PkceParameterNames.CODE_CHALLENGE_METHOD, "S256");
+            additionalParameters.put(PkceParameterNames.CODE_CHALLENGE, s256(codeVerifier));
+            additionalParameters.put(PkceParameterNames.CODE_CHALLENGE_METHOD, "S256");
         }
         return OAuth2AuthorizationRequest.authorizationCode()
                 .clientId(registration.getClientId())
@@ -49,6 +51,7 @@ public record AuthFlowState(
                 .scopes(scopes)
                 .state(state)
                 .attributes(attributes)
+                .additionalParameters(additionalParameters)
                 .build();
     }
 

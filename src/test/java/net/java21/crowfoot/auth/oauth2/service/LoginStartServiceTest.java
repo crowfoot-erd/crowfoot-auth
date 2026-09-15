@@ -60,6 +60,22 @@ class LoginStartServiceTest {
         assertThat(url).contains("client_id=test-client-id");
         assertThat(url).contains("state=");
         assertThat(url).contains("scope=");
+        assertThat(url).doesNotContain("code_challenge");   // GitHub OAuth App은 PKCE 미지원
+        assertThat(response.getHeader("Set-Cookie")).startsWith("auth_flow=");
+    }
+
+    @Test
+    @DisplayName("Google 시작 — PKCE S256 — code_challenge·method가 authorize URL에 포함")
+    void googleStartIncludesPkceChallenge() {
+        when(coreClient.activeProviders()).thenReturn(List.of(new ProviderResponse("google", "Google")));
+        when(clientRegistrationRepository.findByRegistrationId("google")).thenReturn(TestClientRegistrations.google());
+
+        String url = service.start("google", response);
+
+        assertThat(url).startsWith("https://accounts.google.com/o/oauth2/v2/auth");
+        assertThat(url).contains("code_challenge=");
+        assertThat(url).contains("code_challenge_method=S256");
+        assertThat(url).contains("scope=openid");
         assertThat(response.getHeader("Set-Cookie")).startsWith("auth_flow=");
     }
 

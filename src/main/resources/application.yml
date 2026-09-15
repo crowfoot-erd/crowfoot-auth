@@ -19,13 +19,26 @@ spring:
               - user:email
             # 프론트 콜백 구조 — GitHub 앱에 등록된 콜백과 동일한 값(02-auth/api.md Section 3.1)
             redirect-uri: ${crowfoot.auth.front.origin}${crowfoot.auth.front.callback-path}
-          # google: 자격 증명 수령 후 추가 (PKCE 활성) — 02-auth/oauth-provider-setup.md
+          google:
+            client-id: ${CROWFOOT_AUTH_GOOGLE_CLIENT_ID}
+            client-secret: ${CROWFOOT_AUTH_GOOGLE_CLIENT_SECRET}
+            # sub·name·email 클레임 — user-info-uri(openidconnect)가 스코프별로 채운다
+            scope:
+              - openid
+              - profile
+              - email
+            redirect-uri: ${crowfoot.auth.front.origin}${crowfoot.auth.front.callback-path}
         provider:
           github:
             authorization-uri: https://github.com/login/oauth/authorize
             token-uri: https://github.com/login/oauth/access_token
             user-info-uri: https://api.github.com/user
             user-name-attribute: id
+          google:
+            authorization-uri: https://accounts.google.com/o/oauth2/v2/auth
+            token-uri: https://oauth2.googleapis.com/token
+            user-info-uri: https://openidconnect.googleapis.com/v1/userinfo
+            user-name-attribute: sub
 management:
   endpoints:
     web:

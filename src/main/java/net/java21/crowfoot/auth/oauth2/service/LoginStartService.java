@@ -11,7 +11,10 @@ import org.springframework.security.oauth2.client.registration.ClientRegistratio
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.stereotype.Service;
 
+import java.security.SecureRandom;
+import java.util.Base64;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -21,6 +24,10 @@ import java.util.UUID;
  */
 @Service
 public class LoginStartService {
+
+    /** PKCE 지원 제공자 — GitHub OAuth App은 미지원(null 유지), Google은 S256 필수(권장) */
+    private static final Set<String> PKCE_PROVIDERS = Set.of("google");
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     private final CoreClient coreClient;
     private final ClientRegistrationRepository clientRegistrationRepository;
@@ -48,10 +55,17 @@ public class LoginStartService {
         }
 
         String state = UUID.randomUUID().toString();
-        // GitHub OAuth App은 PKCE 미지원 — codeVerifier는 null. Google 추가 시 난수 생성해 싣는다.
-        AuthFlowState flowState = new AuthFlowState(state, null, provider,
+        String codeVerifier = PKCE_PROVIDERS.contains(provider) ? generateCodeVerifier() : null;
+        AuthFlowState flowState = new AuthFlowState(state, codeVerifier, provider,
                 registration.getRedirectUri(), registration.getScopes());
         authFlowCookieService.write(response, flowState);
         return flowState.toAuthorizationRequest(registration).getAuthorizationRequestUri();
+    }
+
+    /** PKCE code_verifier — 무작위 32바이트를 base64url(패딩 없음, 43자)로 인코딩 (RFC 7636 §4.1) */
+    private static String generateCodeVerifier() {
+        byte[] bytes = new byte[32];
+        SECURE_RANDOM.nextBytes(bytes);
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
     }
 }
