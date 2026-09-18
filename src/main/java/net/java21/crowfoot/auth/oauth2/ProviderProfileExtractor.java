@@ -29,7 +29,9 @@ public class ProviderProfileExtractor {
         if (name == null) {
             name = text(attributes.get("login"));
         }
-        return new ProviderProfile("github", String.valueOf(id), text(attributes.get("email")), name);
+        // login은 표시명 폴백과 별개로 핸들로도 실운다 — core가 저장해 채팅 @노출에 쓴다
+        return new ProviderProfile("github", String.valueOf(id), text(attributes.get("login")),
+                text(attributes.get("email")), name);
     }
 
     private ProviderProfile extractGoogle(Map<String, Object> attributes) {
@@ -37,7 +39,7 @@ public class ProviderProfileExtractor {
         if (sub == null) {
             throw new IllegalStateException("Google 프로필에 sub가 없다");
         }
-        return new ProviderProfile("google", String.valueOf(sub), text(attributes.get("email")), text(attributes.get("name")));
+        return new ProviderProfile("google", String.valueOf(sub), null, text(attributes.get("email")), text(attributes.get("name")));
     }
 
     private String text(Object value) {

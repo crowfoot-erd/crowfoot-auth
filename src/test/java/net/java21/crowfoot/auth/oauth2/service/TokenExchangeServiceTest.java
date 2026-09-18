@@ -112,7 +112,7 @@ class TokenExchangeServiceTest {
         when(oauth2User.getAttributes()).thenReturn(Map.of("id", 12345, "login", "octocat",
                 "name", "Octo Cat", "email", "octo@example.com"));
         when(oauth2UserService.loadUser(any(OAuth2UserRequest.class))).thenReturn(oauth2User);
-        when(coreClient.getOrCreateUser("github", "12345", "octo@example.com", "Octo Cat"))
+        when(coreClient.getOrCreateUser("github", "12345", "octocat", "octo@example.com", "Octo Cat"))
                 .thenReturn(new GetOrCreateUserResponse("42", true, false));
         TokenIssueService.IssuedTokens issued = new TokenIssueService.IssuedTokens("sid-1",
                 new net.java21.crowfoot.auth.token.jwt.IssuedToken("access-value", "jti-a", null),
@@ -198,7 +198,7 @@ class TokenExchangeServiceTest {
         OAuth2User oauth2User = org.mockito.Mockito.mock(OAuth2User.class);
         when(oauth2User.getAttributes()).thenReturn(Map.of("id", 12345, "login", "gone"));
         when(oauth2UserService.loadUser(any(OAuth2UserRequest.class))).thenReturn(oauth2User);
-        when(coreClient.getOrCreateUser(eq("github"), eq("12345"), isNull(), eq("gone")))
+        when(coreClient.getOrCreateUser(eq("github"), eq("12345"), eq("gone"), isNull(), eq("gone")))
                 .thenThrow(new CoreCallException("USER_WITHDRAWN", "탈퇴한 계정입니다"));
 
         assertThatThrownBy(() -> service.exchange("github",

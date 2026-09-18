@@ -119,7 +119,7 @@ public class TokenExchangeService {
         GetOrCreateUserResponse user;
         try {
             user = coreClient.getOrCreateUser(profile.provider(), profile.providerUserId(),
-                    profile.email(), profile.name());
+                    profile.username(), profile.email(), profile.name());
         } catch (CoreCallException e) {
             if (ErrorCode.USER_WITHDRAWN.getCode().equals(e.getResultCode())) {
                 throw new BusinessException(ErrorCode.USER_WITHDRAWN);

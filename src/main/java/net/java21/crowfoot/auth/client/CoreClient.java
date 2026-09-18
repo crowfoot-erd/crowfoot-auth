@@ -16,8 +16,9 @@ import java.util.List;
  */
 public interface CoreClient {
 
-    /** OAuth2 제공자 신원으로 회원 확보 — 탈퇴 계정은 CoreCallException(USER_WITHDRAWN) */
-    GetOrCreateUserResponse getOrCreateUser(String provider, String providerUserId, String email, String name);
+    /** OAuth2 제공자 신원으로 회원 확보 — 탈퇴 계정은 CoreCallException(USER_WITHDRAWN).
+     *  username은 제공자 핸들(GitHub login, 선택) — core가 로그인마다 갱신 저장한다. */
+    GetOrCreateUserResponse getOrCreateUser(String provider, String providerUserId, String username, String email, String name);
 
     /** Refresh 발급 등록 — jti 중복은 core가 조용히 멱등 처리(201) */
     void registerRefreshToken(long userId, String jti, String sid, Instant expiresAt, String ip, String userAgent);

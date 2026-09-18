@@ -36,10 +36,10 @@ public class CoreClientImpl implements CoreClient {
     private final ObjectMapper objectMapper;
 
     @Override
-    public GetOrCreateUserResponse getOrCreateUser(String provider, String providerUserId, String email, String name) {
+    public GetOrCreateUserResponse getOrCreateUser(String provider, String providerUserId, String username, String email, String name) {
         try {
             return requireSuccess(coreFeignClient.getOrCreate(
-                    new GetOrCreateUserRequest(provider, providerUserId, email, name))).response();
+                    new GetOrCreateUserRequest(provider, providerUserId, username, email, name))).response();
         } catch (FeignException e) {
             throw translate(e);
         }
