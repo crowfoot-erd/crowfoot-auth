@@ -2,6 +2,11 @@
 spring:
   application:
     name: crowfoot-auth
+  # resultMessage 번들 (api-design.md §5.7) — ko/en/ja/zh, 미지원 로케일·키는 한국어 폴백
+  messages:
+    basename: i18n/messages,i18n/validation/ValidationMessages
+    encoding: UTF-8
+    fallback-to-system-locale: false
   # 기본 프로필 — 지정 없이 기동하면 local. 운영은 SPRING_PROFILES_ACTIVE=prod (k8s)
   profiles:
     default: local

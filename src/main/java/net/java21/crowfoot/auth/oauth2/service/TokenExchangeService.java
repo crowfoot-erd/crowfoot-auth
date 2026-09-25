@@ -2,6 +2,7 @@ package net.java21.crowfoot.auth.oauth2.service;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import net.java21.crowfoot.auth.client.CoreCallException;
 import net.java21.crowfoot.auth.client.CoreClient;
 import net.java21.crowfoot.auth.client.dto.GetOrCreateUserResponse;
@@ -36,6 +37,7 @@ import org.springframework.web.client.RestClientException;
  * 제공자 토큰 교환 → 프로필 → core 회원 확보 → 자체 토큰 발급을 수행한다.
  * 제공자 통신 실패는 502 AUTH_PROVIDER_ERROR, state 불일치는 400 AUTH_STATE_INVALID.
  */
+@Slf4j
 @Service
 public class TokenExchangeService {
 
@@ -110,7 +112,8 @@ public class TokenExchangeService {
             return profileExtractor.extract(flowState.registrationId(),
                     oauth2UserService.loadUser(new OAuth2UserRequest(registration, accessTokenResponse.getAccessToken())).getAttributes());
         } catch (OAuth2AuthorizationException | OAuth2AuthenticationException | RestClientException e) {
-            throw new BusinessException(ErrorCode.AUTH_PROVIDER_ERROR, e.getMessage(), e);
+            log.error("제공자 토큰 교환 실패(registrationId={})", flowState.registrationId(), e);
+            throw new BusinessException(ErrorCode.AUTH_PROVIDER_ERROR);
         }
     }
 
@@ -124,7 +127,8 @@ public class TokenExchangeService {
             if (ErrorCode.USER_WITHDRAWN.getCode().equals(e.getResultCode())) {
                 throw new BusinessException(ErrorCode.USER_WITHDRAWN);
             }
-            throw new BusinessException(ErrorCode.SERVICE_UNAVAILABLE, e.getMessage(), e);
+            log.error("core get-or-create 호출 실패 — 도메인 4xx를 503로 정규화한다", e);
+            throw BusinessException.of(ErrorCode.SERVICE_UNAVAILABLE, "detail.core.unavailable");
         }
         return Long.parseLong(user.userId());
     }

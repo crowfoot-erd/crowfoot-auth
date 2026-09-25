@@ -2,6 +2,7 @@ package net.java21.crowfoot.auth.token.service;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import net.java21.crowfoot.auth.client.CoreCallException;
 import net.java21.crowfoot.auth.client.CoreClient;
 import net.java21.crowfoot.auth.client.dto.RotateRefreshTokenResponse;
@@ -20,6 +21,7 @@ import org.springframework.stereotype.Service;
  * core Rotation 판정: ROTATED→신규 jti Refresh·Access / GRACE(유예 30s 내 재사용·멀티탭)→lineage
  * 최신 jti를 승계 발급(core는 GRACE에서 행을 만들지 않는다 — jti 유지가 계약). sid는 그대로 승계한다.
  */
+@Slf4j
 @Service
 public class RefreshTokenService {
 
@@ -63,8 +65,8 @@ public class RefreshTokenService {
             }
             nextRefresh = jwtIssuer.issueRefreshToken(claims.sub(), claims.sid(), verdict.latestJti());
         } else {
-            throw new BusinessException(ErrorCode.SERVICE_UNAVAILABLE,
-                    "알 수 없는 rotation verdict: " + verdict.verdict());
+            throw BusinessException.of(ErrorCode.SERVICE_UNAVAILABLE,
+                    "detail.refresh.unknown-verdict", verdict.verdict());
         }
         IssuedToken nextAccess = jwtIssuer.issueAccessToken(claims.sub(), claims.sid());
 
@@ -87,7 +89,8 @@ public class RefreshTokenService {
             if (ErrorCode.AUTH_SESSION_REVOKED.getCode().equals(e.getResultCode())) {
                 throw new BusinessException(ErrorCode.AUTH_SESSION_REVOKED);
             }
-            throw new BusinessException(ErrorCode.SERVICE_UNAVAILABLE, e.getMessage(), e);
+            log.error("core rotate 호출 실패 — 도메인 4xx를 503로 정규화한다", e);
+            throw BusinessException.of(ErrorCode.SERVICE_UNAVAILABLE, "detail.core.unavailable");
         }
     }
 }
