@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 
 
 /**
- * 토큰 검증 4항목 (02-auth/requirements.md Section 1.4.8) — 서명·exp(스큐)·iss·aud·typ=ACCESS는
+ * 토큰 검증 4항목 (02-auth/api.md Section 4.1) — 서명·exp(스큐)·iss·aud·typ=ACCESS는
  * {@link AccessTokenValidator}가, 블랙리스트(jti·sid MGET 1회)는 {@link BlacklistStore}가 담당.
  * Refresh 토큰은 INVALID로 거부된다(typ 검증). 검증 사유는 대분류만 노출한다.
  */

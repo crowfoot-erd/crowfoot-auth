@@ -3,7 +3,7 @@ package net.java21.crowfoot.auth.blacklist;
 import java.time.Duration;
 
 /**
- * Access 토큰·세션 블랙리스트 저장소 계약 (02-auth/requirements.md Section 1.4.7).
+ * Access 토큰·세션 블랙리스트 저장소 계약 (02-auth/requirements.md Section 1.4.4 — Access 블랙리스트).
  * 키: bl:at:{jti}(값=사유 LOGOUT/REVOKED, TTL=토큰 잔여 수명)·bl:sid:{sid}(값=REVOKED, TTL=access-ttl).
  * 조회는 jti·sid 두 키를 1회 질의(MGET)로 묶는다.
  *

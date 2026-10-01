@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * Redis 블랙리스트 — SET key value EX seconds·MGET 1회 (02-auth/requirements.md Section 1.4.7).
+ * Redis 블랙리스트 — SET key value EX seconds·MGET 1회 (02-auth/requirements.md Section 1.4.4 — Access 블랙리스트).
  * Redis 접근 불가 시 SERVICE_UNAVAILABLE로 정규화해 올린다(fail-closed — introspection이 503으로 막힌다).
  * 원인 스택은 로그로 남기고, resultMessage는 번들 키(로케일 해석)로 내보낸다.
  */
