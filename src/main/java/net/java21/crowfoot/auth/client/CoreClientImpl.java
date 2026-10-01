@@ -94,6 +94,16 @@ public class CoreClientImpl implements CoreClient {
     }
 
     @Override
+    public void recordAnonymousAuditLog(String action, String detail) {
+        try {
+            coreFeignClient.recordAudit(new CreateAuditLogRequest(null, action, detail));
+        } catch (Exception e) {
+            // best-effort — 감사 기록 실패가 본류의 실패 응답을 바꾸지 않는다
+            log.warn("감사 기록 실패(action={}, actorId=없음) — best-effort 무시", action, e);
+        }
+    }
+
+    @Override
     public List<ProviderResponse> activeProviders() {
         try {
             ListApiResponse<ProviderResponse> body = coreFeignClient.providers();

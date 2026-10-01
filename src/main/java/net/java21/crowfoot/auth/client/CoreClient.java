@@ -36,6 +36,9 @@ public interface CoreClient {
     /** 인증 이벤트 감사 기록 — best-effort, 실패 시 경고 로그만 */
     void recordAuditLog(long actorId, String action, String detail);
 
+    /** 행위자를 식별하기 전의 인증 이벤트(로그인 실패) 감사 기록 — actorId 없이 보낸다. best-effort */
+    void recordAnonymousAuditLog(String action, String detail);
+
     /** 활성 제공자 목록(로그인 시작·교환의 활성 검증) */
     List<ProviderResponse> activeProviders();
 }

@@ -41,6 +41,8 @@ import org.springframework.web.client.RestClientException;
 @Service
 public class TokenExchangeService {
 
+    public static final String ACTION_USER_LOGIN_FAILED = "USER_LOGIN_FAILED";
+
     private final ClientRegistrationRepository clientRegistrationRepository;
     private final OAuth2AccessTokenResponseClient<OAuth2AuthorizationCodeGrantRequest> tokenResponseClient;
     private final DefaultOAuth2UserService oauth2UserService;
@@ -71,10 +73,27 @@ public class TokenExchangeService {
         this.properties = properties;
     }
 
+    /**
+     * 교환 실패는 감사 기록 USER_LOGIN_FAILED로 남긴 뒤 그대로 전파한다 (02-auth/api.md Section 3.2 실패 감사).
+     * 사용자를 식별하기 전의 실패가 섞이므로 actorId 없이 보내고, detail에 제공자와 실패 코드를 적는다.
+     */
     public TokenResponse exchange(String provider,
                                   TokenExchangeRequest request,
                                   HttpServletRequest servletRequest,
                                   HttpServletResponse servletResponse) {
+        try {
+            return doExchange(provider, request, servletRequest, servletResponse);
+        } catch (BusinessException e) {
+            coreClient.recordAnonymousAuditLog(ACTION_USER_LOGIN_FAILED,
+                    "provider=" + provider + ";reason=" + e.getErrorCode().getCode());
+            throw e;
+        }
+    }
+
+    private TokenResponse doExchange(String provider,
+                                     TokenExchangeRequest request,
+                                     HttpServletRequest servletRequest,
+                                     HttpServletResponse servletResponse) {
         AuthFlowState flowState = authFlowCookieService.read(servletRequest)
                 .orElseThrow(() -> new BusinessException(ErrorCode.AUTH_STATE_INVALID));
         if (!flowState.state().equals(request.state())

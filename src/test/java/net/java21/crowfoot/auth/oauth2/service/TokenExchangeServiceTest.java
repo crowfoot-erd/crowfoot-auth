@@ -128,16 +128,22 @@ class TokenExchangeServiceTest {
         // Refresh는 쿠키로, auth_flow는 삭제로 — Set-Cookie는 2건 발행된다
         assertThat(response.getHeaders("Set-Cookie").toString()).contains("crowfoot_refresh=refresh-value");
         assertThat(response.getHeaders("Set-Cookie").toString()).contains("auth_flow=;");
+        // 성공한 교환은 실패 감사를 남기지 않는다
+        org.mockito.Mockito.verify(coreClient, org.mockito.Mockito.never())
+                .recordAnonymousAuditLog(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString());
     }
 
     @Test
-    @DisplayName("state 불일치 — AUTH_STATE_INVALID")
+    @DisplayName("state 불일치 — AUTH_STATE_INVALID, 실패 감사 USER_LOGIN_FAILED(provider·reason)")
     void stateMismatchThrows() {
         assertThatThrownBy(() -> service.exchange("github",
                 new TokenExchangeRequest(CODE, "different-state"), request, response))
                 .isInstanceOf(BusinessException.class)
                 .extracting(e -> ((BusinessException) e).getErrorCode())
                 .isEqualTo(ErrorCode.AUTH_STATE_INVALID);
+        // 액션 값은 core의 일별 로그인 집계가 세는 문자열과 같아야 한다 — 리터럴로 고정한다
+        org.mockito.Mockito.verify(coreClient)
+                .recordAnonymousAuditLog("USER_LOGIN_FAILED", "provider=github;reason=AUTH_STATE_INVALID");
     }
 
     @Test
@@ -173,6 +179,8 @@ class TokenExchangeServiceTest {
                 .isInstanceOf(BusinessException.class)
                 .extracting(e -> ((BusinessException) e).getErrorCode())
                 .isEqualTo(ErrorCode.AUTH_PROVIDER_ERROR);
+        org.mockito.Mockito.verify(coreClient)
+                .recordAnonymousAuditLog("USER_LOGIN_FAILED", "provider=github;reason=AUTH_PROVIDER_ERROR");
     }
 
     @Test
@@ -206,5 +214,7 @@ class TokenExchangeServiceTest {
                 .isInstanceOf(BusinessException.class)
                 .extracting(e -> ((BusinessException) e).getErrorCode())
                 .isEqualTo(ErrorCode.USER_WITHDRAWN);
+        org.mockito.Mockito.verify(coreClient)
+                .recordAnonymousAuditLog("USER_LOGIN_FAILED", "provider=github;reason=USER_WITHDRAWN");
     }
 }
