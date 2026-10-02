@@ -9,12 +9,14 @@ package net.java21.crowfoot.auth.introspection;
  * @param sub            사용자 식별자(BIGINT 문자열) — 활성일 때만
  * @param jti            토큰 식별자
  * @param sid            세션 식별자
- * @param typ            토큰 유형(ACCESS)
+ * @param typ            토큰 유형(ACCESS 또는 WORKSPACE_TOKEN)
  * @param iss            발급자
  * @param aud            수신자 목록(공백 결합 문자열 — gateway 파싱 계약)
  * @param iat            발급 시각(epoch seconds)
  * @param exp            만료 시각(epoch seconds)
  * @param inactiveReason 비활성 사유(EXPIRED/REVOKED/INVALID) — 활성이면 null
+ * @param workspaceId    토큰이 묶인 워크스페이스 — typ이 WORKSPACE_TOKEN일 때만
+ * @param tokenId        워크스페이스 액세스 토큰 ID — typ이 WORKSPACE_TOKEN일 때만
  */
 public record IntrospectionResponse(
         boolean active,
@@ -26,6 +28,8 @@ public record IntrospectionResponse(
         String aud,
         Long iat,
         Long exp,
-        String inactiveReason
+        String inactiveReason,
+        String workspaceId,
+        String tokenId
 ) {
 }

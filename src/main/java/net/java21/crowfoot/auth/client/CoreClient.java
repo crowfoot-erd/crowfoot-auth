@@ -41,4 +41,7 @@ public interface CoreClient {
 
     /** 활성 제공자 목록(로그인 시작·교환의 활성 검증) */
     List<ProviderResponse> activeProviders();
+
+    /** 워크스페이스 액세스 토큰 검증 (08-core/18-access-token.md Section 3.4) — core가 응답하지 않으면 SERVICE_UNAVAILABLE(fail-closed) */
+    net.java21.crowfoot.auth.client.dto.VerifyAccessTokenResponse verifyAccessToken(String tokenHash);
 }

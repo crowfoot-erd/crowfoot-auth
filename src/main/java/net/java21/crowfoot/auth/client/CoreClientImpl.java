@@ -116,6 +116,16 @@ public class CoreClientImpl implements CoreClient {
         }
     }
 
+    @Override
+    public net.java21.crowfoot.auth.client.dto.VerifyAccessTokenResponse verifyAccessToken(String tokenHash) {
+        try {
+            return requireSuccess(coreFeignClient.verifyAccessToken(
+                    new net.java21.crowfoot.auth.client.dto.VerifyAccessTokenRequest(tokenHash))).response();
+        } catch (FeignException e) {
+            throw translate(e);
+        }
+    }
+
     /** 2xx인데 header가 실패를 담은 경우(계약 밖) — resultCode를 그대로 전파한다 */
     private <T> ApiResponse<T> requireSuccess(ApiResponse<T> body) {
         if (body == null || body.header() == null || !body.header().isSuccessful()) {

@@ -46,7 +46,7 @@ class InternalAuthControllerWebTest {
         given(introspectionService.introspect("token-value")).willReturn(new IntrospectionResponse(
                 true, "42", "jti-1", "sid-1", "ACCESS",
                 "https://crowfoot-api.java21.net", "crowfoot-web crowfoot-sync",
-                1760000000L, 1760003600L, null));
+                1760000000L, 1760003600L, null, null, null));
 
         mockMvc.perform(post("/internal/auth/introspect")
                         .contentType(APPLICATION_FORM_URLENCODED)
@@ -62,10 +62,29 @@ class InternalAuthControllerWebTest {
     }
 
     @Test
+    @DisplayName("introspect 워크스페이스 액세스 토큰 — typ WORKSPACE_TOKEN·workspaceId·tokenId가 실리고 jti·sid·iss는 없다")
+    void introspectWorkspaceToken() throws Exception {
+        given(introspectionService.introspect("cfw_abc")).willReturn(new IntrospectionResponse(
+                true, "42", null, null, "WORKSPACE_TOKEN", null, null, null, null, null, "77", "12"));
+
+        mockMvc.perform(post("/internal/auth/introspect")
+                        .contentType(APPLICATION_FORM_URLENCODED)
+                        .param("token", "cfw_abc"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.response.active").value(true))
+                .andExpect(jsonPath("$.response.sub").value("42"))
+                .andExpect(jsonPath("$.response.typ").value("WORKSPACE_TOKEN"))
+                .andExpect(jsonPath("$.response.workspaceId").value("77"))
+                .andExpect(jsonPath("$.response.tokenId").value("12"))
+                .andExpect(jsonPath("$.response.jti").doesNotExist())
+                .andExpect(jsonPath("$.response.exp").doesNotExist());
+    }
+
+    @Test
     @DisplayName("introspect 비활성 — 200 + active=false + inactiveReason(무효도 API 실패가 아니다)")
     void introspectInactive() throws Exception {
         given(introspectionService.introspect("expired-token")).willReturn(new IntrospectionResponse(
-                false, null, null, null, null, null, null, null, null, "EXPIRED"));
+                false, null, null, null, null, null, null, null, null, "EXPIRED", null, null));
 
         mockMvc.perform(post("/internal/auth/introspect")
                         .contentType(APPLICATION_FORM_URLENCODED)

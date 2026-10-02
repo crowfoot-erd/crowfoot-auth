@@ -7,6 +7,8 @@ import net.java21.crowfoot.auth.client.dto.ProviderResponse;
 import net.java21.crowfoot.auth.client.dto.RegisterRefreshTokenRequest;
 import net.java21.crowfoot.auth.client.dto.RotateRefreshTokenRequest;
 import net.java21.crowfoot.auth.client.dto.RotateRefreshTokenResponse;
+import net.java21.crowfoot.auth.client.dto.VerifyAccessTokenRequest;
+import net.java21.crowfoot.auth.client.dto.VerifyAccessTokenResponse;
 import net.java21.crowfoot.auth.common.ApiResponse;
 import net.java21.crowfoot.auth.common.ListApiResponse;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -42,6 +44,9 @@ public interface CoreFeignClient {
 
     @PostMapping("/internal/core/audit-logs")
     ApiResponse<Void> recordAudit(@RequestBody CreateAuditLogRequest request);
+
+    @PostMapping("/internal/core/access-tokens/verify")
+    ApiResponse<VerifyAccessTokenResponse> verifyAccessToken(@RequestBody VerifyAccessTokenRequest request);
 
     @GetMapping("/internal/core/providers")
     ListApiResponse<ProviderResponse> providers();
