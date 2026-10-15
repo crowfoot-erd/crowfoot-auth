@@ -3,6 +3,8 @@ package net.java21.crowfoot.auth.common.error;
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
 
+import java.util.Locale;
+
 /**
  * 인증 서버 에러 코드 (02-auth/api.md Section 5 + 01-architecture/api-design.md Section 5.4).
  *
@@ -40,6 +42,6 @@ public enum ErrorCode {
 
     /** 번들 키 — i18n/messages_{ko,en,ja,zh}.properties의 error.{code} (api-design.md §5.7, core 미러) */
     public String messageKey() {
-        return "error." + code.toLowerCase();
+        return "error." + code.toLowerCase(Locale.ROOT);
     }
 }

@@ -3,7 +3,6 @@ package net.java21.crowfoot.auth.introspection;
 import net.java21.crowfoot.auth.blacklist.BlacklistStore;
 import net.java21.crowfoot.auth.token.jwt.AccessTokenValidator;
 import net.java21.crowfoot.auth.token.jwt.InactiveReason;
-import net.java21.crowfoot.auth.token.jwt.JwtIssuer;
 import net.java21.crowfoot.auth.client.CoreClient;
 import net.java21.crowfoot.auth.client.dto.VerifyAccessTokenResponse;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -12,6 +11,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
+import java.util.Objects;
 import org.springframework.stereotype.Service;
 
 
@@ -57,11 +57,11 @@ public class IntrospectionService {
                 jwt.getId(),
                 jwt.getClaimAsString("sid"),
                 jwt.getClaimAsString("typ"),
-                // Security 7 — getIssuer() 반환형이 String에서 URL로 변경됨
-                jwt.getIssuer().toString(),
+                // Security 7 — getIssuer() 반환형이 String에서 URL로 변경됨. 우리가 발급한 토큰은 iss·iat·exp가 늘 있다
+                Objects.requireNonNull(jwt.getIssuer(), "iss").toString(),
                 String.join(" ", jwt.getAudience()),
-                jwt.getIssuedAt().toEpochMilli() / 1000,
-                jwt.getExpiresAt().toEpochMilli() / 1000,
+                Objects.requireNonNull(jwt.getIssuedAt(), "iat").toEpochMilli() / 1000,
+                Objects.requireNonNull(jwt.getExpiresAt(), "exp").toEpochMilli() / 1000,
                 null,
                 null,
                 null);

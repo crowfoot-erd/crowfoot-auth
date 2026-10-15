@@ -29,7 +29,7 @@ public class RedisBlacklistStore implements BlacklistStore {
             redisTemplate.opsForValue().set("bl:at:" + jti, reason, ttl);
         } catch (RuntimeException e) {
             log.error("블랙리스트 등록 실패(jti={})", jti, e);
-            throw BusinessException.of(ErrorCode.SERVICE_UNAVAILABLE, "detail.blacklist.register");
+            throw BusinessException.of(ErrorCode.SERVICE_UNAVAILABLE, "detail.blacklist.register").withCause(e);
         }
     }
 
@@ -39,7 +39,7 @@ public class RedisBlacklistStore implements BlacklistStore {
             redisTemplate.opsForValue().set("bl:sid:" + sid, "REVOKED", ttl);
         } catch (RuntimeException e) {
             log.error("블랙리스트 등록 실패(sid={})", sid, e);
-            throw BusinessException.of(ErrorCode.SERVICE_UNAVAILABLE, "detail.blacklist.register");
+            throw BusinessException.of(ErrorCode.SERVICE_UNAVAILABLE, "detail.blacklist.register").withCause(e);
         }
     }
 
@@ -48,12 +48,12 @@ public class RedisBlacklistStore implements BlacklistStore {
         try {
             List<String> values = redisTemplate.opsForValue()
                     .multiGet(List.of("bl:at:" + jti, "bl:sid:" + sid));
-            boolean tokenBlocked = values != null && values.size() > 0 && Objects.nonNull(values.get(0));
+            boolean tokenBlocked = values != null && !values.isEmpty() && Objects.nonNull(values.get(0));
             boolean sessionBlocked = values != null && values.size() > 1 && Objects.nonNull(values.get(1));
             return new BlockResult(tokenBlocked, sessionBlocked);
         } catch (RuntimeException e) {
             log.error("블랙리스트 조회 실패(jti={}, sid={})", jti, sid, e);
-            throw BusinessException.of(ErrorCode.SERVICE_UNAVAILABLE, "detail.blacklist.lookup");
+            throw BusinessException.of(ErrorCode.SERVICE_UNAVAILABLE, "detail.blacklist.lookup").withCause(e);
         }
     }
 }

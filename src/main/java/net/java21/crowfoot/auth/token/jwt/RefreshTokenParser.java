@@ -43,9 +43,9 @@ public class RefreshTokenParser {
             }
             return new RefreshClaims(jwt.getSubject(), jwt.getId(), jwt.getClaimAsString("sid"), jwt.getExpiresAt());
         } catch (JwtValidationException e) {
-            throw new BusinessException(expired(token) ? ErrorCode.AUTH_TOKEN_EXPIRED : ErrorCode.AUTH_TOKEN_INVALID);
+            throw new BusinessException(expired(token) ? ErrorCode.AUTH_TOKEN_EXPIRED : ErrorCode.AUTH_TOKEN_INVALID, e);
         } catch (JwtException | IllegalArgumentException e) {
-            throw new BusinessException(ErrorCode.AUTH_TOKEN_INVALID);
+            throw new BusinessException(ErrorCode.AUTH_TOKEN_INVALID, e);
         }
     }
 
@@ -53,7 +53,8 @@ public class RefreshTokenParser {
     private boolean expired(String token) {
         try {
             Jwt jwt = lenientJwtDecoder.decode(token);
-            return jwt.getExpiresAt() != null && jwt.getExpiresAt()
+            Instant expiresAt = jwt.getExpiresAt();
+            return expiresAt != null && expiresAt
                     .minus(properties.token().clockSkew())
                     .isBefore(clock.instant());
         } catch (JwtException | IllegalArgumentException e) {
@@ -70,7 +71,7 @@ public class RefreshTokenParser {
             }
             return new RefreshClaims(jwt.getSubject(), jwt.getId(), jwt.getClaimAsString("sid"), jwt.getExpiresAt());
         } catch (JwtException | IllegalArgumentException e) {
-            throw new BusinessException(ErrorCode.AUTH_TOKEN_INVALID);
+            throw new BusinessException(ErrorCode.AUTH_TOKEN_INVALID, e);
         }
     }
 

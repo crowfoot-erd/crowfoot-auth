@@ -9,6 +9,7 @@ import org.springframework.security.oauth2.jwt.JwtValidationException;
 import org.springframework.stereotype.Component;
 
 import java.time.Clock;
+import java.time.Instant;
 
 /**
  * Access 토큰 검증 (introspection 하위) — 서명·exp(스큐)·iss·aud·typ=ACCESS 4항목.
@@ -53,7 +54,8 @@ public class AccessTokenValidator {
     private InactiveReason expired(String token) {
         try {
             Jwt jwt = lenientJwtDecoder.decode(token);
-            boolean expired = jwt.getExpiresAt() != null && jwt.getExpiresAt()
+            Instant expiresAt = jwt.getExpiresAt();
+            boolean expired = expiresAt != null && expiresAt
                     .minus(properties.token().clockSkew())
                     .isBefore(clock.instant());
             return expired ? InactiveReason.EXPIRED : InactiveReason.INVALID;

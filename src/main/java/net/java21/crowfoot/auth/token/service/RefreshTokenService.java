@@ -84,13 +84,13 @@ public class RefreshTokenService {
                     candidate.jti(), candidate.expiresAt());
         } catch (CoreCallException e) {
             if ("REFRESH_TOKEN_NOT_FOUND".equals(e.getResultCode())) {
-                throw new BusinessException(ErrorCode.AUTH_TOKEN_INVALID);
+                throw new BusinessException(ErrorCode.AUTH_TOKEN_INVALID, e);
             }
             if (ErrorCode.AUTH_SESSION_REVOKED.getCode().equals(e.getResultCode())) {
-                throw new BusinessException(ErrorCode.AUTH_SESSION_REVOKED);
+                throw new BusinessException(ErrorCode.AUTH_SESSION_REVOKED, e);
             }
             log.error("core rotate 호출 실패 — 도메인 4xx를 503로 정규화한다", e);
-            throw BusinessException.of(ErrorCode.SERVICE_UNAVAILABLE, "detail.core.unavailable");
+            throw BusinessException.of(ErrorCode.SERVICE_UNAVAILABLE, "detail.core.unavailable").withCause(e);
         }
     }
 }

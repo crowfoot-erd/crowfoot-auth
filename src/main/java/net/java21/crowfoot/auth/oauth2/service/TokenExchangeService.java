@@ -29,8 +29,11 @@ import org.springframework.security.oauth2.core.endpoint.OAuth2AccessTokenRespon
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationExchange;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationResponse;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
+
+import java.util.Objects;
 
 /**
  * 인가 코드 교환 (02-auth/api.md Section 3.2) — 콜백 페이지가 넘긴 code·state로
@@ -128,11 +131,13 @@ public class TokenExchangeService {
             accessTokenResponse = tokenResponseClient.getTokenResponse(
                     new OAuth2AuthorizationCodeGrantRequest(registration,
                             new OAuth2AuthorizationExchange(authorizationRequest, authorizationResponse)));
-            return profileExtractor.extract(flowState.registrationId(),
-                    oauth2UserService.loadUser(new OAuth2UserRequest(registration, accessTokenResponse.getAccessToken())).getAttributes());
+            OAuth2User user = Objects.requireNonNull(
+                    oauth2UserService.loadUser(new OAuth2UserRequest(registration, accessTokenResponse.getAccessToken())),
+                    "제공자 UserInfo 응답이 비었다");
+            return profileExtractor.extract(flowState.registrationId(), user.getAttributes());
         } catch (OAuth2AuthorizationException | OAuth2AuthenticationException | RestClientException e) {
             log.error("제공자 토큰 교환 실패(registrationId={})", flowState.registrationId(), e);
-            throw new BusinessException(ErrorCode.AUTH_PROVIDER_ERROR);
+            throw new BusinessException(ErrorCode.AUTH_PROVIDER_ERROR, e);
         }
     }
 
@@ -144,10 +149,10 @@ public class TokenExchangeService {
                     profile.username(), profile.email(), profile.name());
         } catch (CoreCallException e) {
             if (ErrorCode.USER_WITHDRAWN.getCode().equals(e.getResultCode())) {
-                throw new BusinessException(ErrorCode.USER_WITHDRAWN);
+                throw new BusinessException(ErrorCode.USER_WITHDRAWN, e);
             }
             log.error("core get-or-create 호출 실패 — 도메인 4xx를 503로 정규화한다", e);
-            throw BusinessException.of(ErrorCode.SERVICE_UNAVAILABLE, "detail.core.unavailable");
+            throw BusinessException.of(ErrorCode.SERVICE_UNAVAILABLE, "detail.core.unavailable").withCause(e);
         }
         return Long.parseLong(user.userId());
     }
